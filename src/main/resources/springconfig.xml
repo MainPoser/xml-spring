@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx
+    			http://www.springframework.org/schema/tx/spring-tx.xsd
+        		http://www.springframework.org/schema/aop
+        		http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <!--accountDao2继承JdbcDaoSupport-->
+    <bean id="accountDao2" class="com.lovejava.dao.impl.AccountDaoImpl2">
+        <!--配置从父类继承过来的dataSources属性-->
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+    <!--配置service层-->
+    <bean id="accountService" class="com.lovejava.service.impl.AccountServiceImpl">
+        <property name="accountDao" ref="accountDao2"></property>
+    </bean>
+    <!--配置一个事务管理器-->
+    <bean id="txManage" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <!--注入DataSource-->
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+    <!--配置事务-->
+    <tx:advice id="txAdvice" transaction-manager="txManage">
+        <!--配置事务属性-->
+        <tx:attributes>
+            <tx:method name="*" read-only="false" propagation="REQUIRED" rollback-for="java.lang.Exception"/>
+            <tx:method name="find*" read-only="true" propagation="SUPPORTS"/>
+        </tx:attributes>
+    </tx:advice>
+    <!--配置aop-->
+    <aop:config>
+        <!--切入点配置-->
+        <aop:pointcut id="pt01" expression="execution(* com.lovejava.service.impl.*.*(..))"/>
+        <!--切面配置-->
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="pt01"/>
+    </aop:config>
+
+
+
+    <!--引入外部数据源-->
+    <context:property-placeholder location="classpath:jdbc.properties" />
+
+
+
+    <!--配置数据库操作模板-->
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <constructor-arg name="dataSource" ref="dataSource"/>
+        <!--<property name="dataSource" ref="dataSourceC"></property>-->
+    </bean>
+
+
+
+    <!--AccountDao-->
+    <bean id="accountDao" class="com.lovejava.dao.impl.AccountDaoImpl">
+        <!--注入jdbcTemplate-->
+        <property name="jdbcTemplate" ref="jdbcTemplate"></property>
+    </bean>
+
+
+    <!--扫描包-->
+   <!--<context:component-scan base-package="com.lovejava"></context:component-scan>-->
+
+
+
+    <!--c3p0数据源
+    c3p0.jar
+    -->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="password" value="${jdbc.password}"></property>
+        <property name="user" value="${jdbc.username}"></property>
+        <property name="jdbcUrl" value="${jdbc.url}"></property>
+        <property name="driverClass" value="${jdbc.driverClass}"></property>
+    </bean>
+
+
+
+    <!--&lt;!&ndash;dbcp数据源
+    commons.dbcp
+    &ndash;&gt;
+    <bean id="dataSourceD" class="org.apache.commons.dbcp.BasicDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"></property>
+        <property name="url" value="jdbc:mysql://127.0.0.1:3306/spring"></property>
+        <property name="username" value="root"></property>
+        <property name="password" value="root"></property>
+    </bean>
+
+
+
+    &lt;!&ndash;spring数据源
+    spring-jdbc-5.0.2.REEASE.jar
+    &ndash;&gt;
+    <bean id="dataSourceS" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"></property>
+        <property name="url" value="jdbc:mysql://127.0.0.1:3306/spring"></property>
+        <property name="username" value="root"></property>
+        <property name="password" value="root"></property>
+    </bean>
+-->
+
+</beans>
